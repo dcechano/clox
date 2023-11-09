@@ -52,10 +52,6 @@ int addConstant(Chunk *chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
-int getLine(Chunk *chunk, int byte_index) {
-    return 0;
-}
-
 void writeConstant(Chunk *chunk, Value value, int line) {
     int constIndx = addConstant(chunk, value);
 

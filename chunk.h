@@ -16,6 +16,11 @@ typedef enum {
      * 23 is the index to find the constant in the constant table.*/
     OP_CONSTANT,
     OP_CONSTANT_LONG,
+    OP_ADD,
+    OP_SUBTRACT,
+    OP_MULTIPLY,
+    OP_DIVIDE,
+    OP_NEGATE,
     // Return from the current function
     OP_RETURN,
 } OpCode;
@@ -29,14 +34,10 @@ typedef struct {
     ValueArray constants;
 } Chunk;
 
-
 void initChunk(Chunk* chunk);
 void freeChunk(Chunk* chunk);
 void writeChunk(Chunk* chunk, uint8_t byte, int line);
 int addConstant(Chunk *chunk, Value value);
 void writeConstant(Chunk *chunk, Value value, int line);
 
-
-
 #endif
-

@@ -11,12 +11,15 @@ int main() {
     Chunk chunk;
     initChunk(&chunk);
 
-    for (int i = 0; i < 256; i++) {
-        writeConstant(&chunk, 420.0 + i, 69);
-    }
+    writeConstant(&chunk, 10.0, 123);
+    writeConstant(&chunk, 2.0, 123);
+    writeConstant(&chunk, 3.0, 123);
+    writeChunk(&chunk, OP_ADD, 123);
 
-    writeConstant(&chunk, 2.0, 124);
-    writeChunk(&chunk, OP_RETURN, 123);
+//
+    writeChunk(&chunk, OP_DIVIDE, 123);
+    writeChunk(&chunk, OP_NEGATE, 123);
+    writeChunk(&chunk, OP_RETURN, 124);
     disassembleChunk(&chunk, "test chunk");
     interpret(&chunk);
     freeVM();
