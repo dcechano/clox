@@ -9,14 +9,14 @@ typedef double Value;
 
 // ValueArray represents a 'constants table'.
 typedef struct {
-    int capacity;
-    int count;
-    Value *values;
+  int capacity;
+  int count;
+  Value *values;
 } ValueArray;
 
-void initValueArray(ValueArray* array);
-void writeValueArray(ValueArray* array, Value value);
-void freeValueArray(ValueArray* array);
+void initValueArray(ValueArray *array);
+void writeValueArray(ValueArray *array, Value value);
+void freeValueArray(ValueArray *array);
 void printValue(Value value);
 
-#endif //CLOX_VALUE_H
+#endif // CLOX_VALUE_H
