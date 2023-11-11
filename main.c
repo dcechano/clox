@@ -60,7 +60,7 @@ static void runFile(const char *path) {
     exit(70);
 }
 
-int main() {
+int main(int argc, const char* argv[]) {
   initVM();
   if (argc == 1) {
     repl();
