@@ -19,10 +19,8 @@ void initScanner(const char *source) {
     scanner.line = 1;
 }
 
-static bool isAlpha(char c){
-    return (c >= 'a' && c <='z')
-    || (c >= 'A' && c <= 'Z')
-           || c == '_';
+static bool isAlpha(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
 static bool isDigit(char c) {
@@ -54,7 +52,7 @@ static Token errorToken(const char *message) {
     return token;
 }
 
-static char peek(){
+static char peek() {
     return *scanner.current;
 }
 
@@ -90,7 +88,7 @@ static void skipWhitespace() {
 }
 
 static TokenType checkKeyword(int start, int length,
-    const char *rest, TokenType type){
+                              const char *rest, TokenType type) {
     if (scanner.current - scanner.start == start + length &&
         memcmp(scanner.start + start, rest, length) == 0) {
         return type;
@@ -110,9 +108,12 @@ static TokenType identifierType() {
         case 'f':
             if (scanner.current - scanner.start > 1) {
                 switch (scanner.start[1]) {
-                    case 'a': return checkKeyword(2, 3, "lse", TOKEN_FALSE);
-                    case 'o': return checkKeyword(2, 1, "r", TOKEN_FOR);
-                    case 'u': return checkKeyword(2, 1, "n", TOKEN_FUN);
+                    case 'a':
+                        return checkKeyword(2, 3, "lse", TOKEN_FALSE);
+                    case 'o':
+                        return checkKeyword(2, 1, "r", TOKEN_FOR);
+                    case 'u':
+                        return checkKeyword(2, 1, "n", TOKEN_FUN);
                 }
             }
             break;
@@ -131,8 +132,10 @@ static TokenType identifierType() {
         case 't':
             if (scanner.current - scanner.start > 1) {
                 switch (scanner.start[1]) {
-                    case 'h': return checkKeyword(2, 2, "is", TOKEN_THIS);
-                    case 'r': return checkKeyword(2, 2, "ue", TOKEN_TRUE);
+                    case 'h':
+                        return checkKeyword(2, 2, "is", TOKEN_THIS);
+                    case 'r':
+                        return checkKeyword(2, 2, "ue", TOKEN_TRUE);
                 }
             }
             break;
@@ -152,7 +155,7 @@ static Token identifier() {
 static Token number() {
     while (isDigit(peek())) advance();
 
-//    look for a fractional part
+    //    look for a fractional part
     if (peek() == '.' && isDigit(peekNext())) {
         advance();
         while (isDigit(peek())) advance();
@@ -166,7 +169,7 @@ static Token string() {
         advance();
     }
 
-    if(isAtEnd()) return errorToken("Unterminated string");
+    if (isAtEnd()) return errorToken("Unterminated string");
 
     advance();
     return makeToken(TOKEN_STRING);
@@ -188,8 +191,8 @@ Token scanToken() {
         return makeToken(TOKEN_EOF);
 
     char c = advance();
-    if(isAlpha(c)) return identifier();
-    if(isDigit(c)) return number();
+    if (isAlpha(c)) return identifier();
+    if (isDigit(c)) return number();
 
     switch (c) {
         case '(':
