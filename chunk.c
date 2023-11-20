@@ -3,10 +3,10 @@
 #include <stdlib.h>
 
 void initChunk(Chunk *chunk) {
-    chunk->count = 0;
+    chunk->count    = 0;
     chunk->capacity = 0;
-    chunk->bcode = NULL;
-    chunk->lines = NULL;
+    chunk->bcode    = NULL;
+    chunk->lines    = NULL;
     initValueArray(&chunk->constants);
 }
 

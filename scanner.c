@@ -14,9 +14,9 @@ typedef struct {
 Scanner scanner;
 
 void initScanner(const char *source) {
-    scanner.start = source;
+    scanner.start   = source;
     scanner.current = source;
-    scanner.line = 1;
+    scanner.line    = 1;
 }
 
 static bool isAlpha(char c) {
@@ -36,19 +36,19 @@ char advance() {
 
 static Token makeToken(TokenType type) {
     Token token;
-    token.type = type;
-    token.start = scanner.start;
+    token.type   = type;
+    token.start  = scanner.start;
     token.length = (int) (scanner.current - scanner.start);
-    token.line = scanner.line;
+    token.line   = scanner.line;
     return token;
 }
 
 static Token errorToken(const char *message) {
     Token token;
-    token.type = TOKEN_ERROR;
-    token.start = message;
+    token.type   = TOKEN_ERROR;
+    token.start  = message;
     token.length = (int) strlen(message);
-    token.line = scanner.line;
+    token.line   = scanner.line;
     return token;
 }
 
