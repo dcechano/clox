@@ -4,7 +4,7 @@
 #include "common.h"
 
 // Change capacity of Chunk struct
-#define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) *2)
+#define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)
 
 /* Grow the array by allocating more memory */
 #define GROW_ARRAY(type, pointer, oldCount, newCount)       \

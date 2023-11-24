@@ -3,10 +3,10 @@
 //
 
 #include "vm.h"
-#include "value.h"
 #include "common.h"
 #include "compiler.h"
 #include "debug.h"
+#include "value.h"
 #include <stdarg.h>
 #include <stdio.h>
 
