@@ -2,6 +2,9 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "object.h"
+
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
 
 // Change capacity of Chunk struct
 #define GROW_CAPACITY(capacity) ((capacity) < 8 ? 8 : (capacity) * 2)
@@ -22,5 +25,6 @@
  *  Non‑zero 	Larger than oldSize 	Grow existing allocation.
  */
 void *reallocate(void *pointer, size_t oldSize, size_t newSize);
+void freeObjects();
 
 #endif// CLOX_MEMORY_H
