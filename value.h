@@ -41,7 +41,7 @@ typedef struct {
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 #define OBJ_VAL(object) ((Value){VAL_OBJ, {.obj = (Obj *) object}})
 
-// ValueArray represents a 'constants table'.
+// ValueArray represents a 'constants table' holding Value types.
 typedef struct {
     int capacity;
     int count;

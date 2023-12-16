@@ -1,12 +1,14 @@
 //
 // Created by dylan on 11/8/23.
 //
+#include "object.h"
 
 #ifndef CLOX_VM_MACRO_H
 #define CLOX_VM_MACRO_H
 
 #define READ_BYTE() ((int) *vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_LONG_CONSTANT() \
     (vm.chunk->constants.values[READ_BYTE() + READ_BYTE() + READ_BYTE()])
 

@@ -12,9 +12,11 @@
 
 typedef struct {
     Chunk *chunk;
+    // Instruction pointer. Points to the current chunk's next bytecode instruction.
     uint8_t *ip;
     Value stack[STACK_MAX];
     Value *stackTop;
+    Table globals;
     Table strings;
     Obj *objects;
 } VM;

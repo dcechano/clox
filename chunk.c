@@ -54,13 +54,14 @@ int addConstant(Chunk *chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
-void writeConstant(Chunk *chunk, Value value, int line) {
+// TODO FIX THIS
+int writeConstant(Chunk *chunk, Value value, int line) {
     int constIndx = addConstant(chunk, value);
 
     if (constIndx <= 255) {
         writeChunk(chunk, OP_CONSTANT, line);
         writeChunk(chunk, constIndx, line);
-        return;
+        return constIndx;
     }
     if (constIndx > 255 * 3) {
         exit(1);
@@ -78,4 +79,6 @@ void writeConstant(Chunk *chunk, Value value, int line) {
             writeChunk(chunk, constIndx, line);
         }
     }
+    return constIndx;
+
 }

@@ -17,7 +17,6 @@ void initTable(Table *table) {
     table->capacity = 0;
     table->entries  = NULL;
 }
-
 void freeTable(Table *table) {
     FREE_ARRAY(Entry, table->entries, table->count);
     initTable(table);
@@ -30,10 +29,9 @@ static Entry *findEntry(Entry *entries, int capacity, ObjString *key) {
         Entry *entry = &entries[index];
         if (entry->key == NULL) {
             if (IS_NIL(entry->value)) {
-                return tombstone == NULL ? tombstone : entry;
-            } else {
-                if (tombstone == NULL) tombstone = entry;
+                return tombstone != NULL ? tombstone : entry;
             }
+            if (tombstone == NULL) tombstone = entry;
         } else if (entry->key == key) {
             return entry;
         }
@@ -121,6 +119,6 @@ ObjString *tableFindString(Table *table, const char *chars, int length, uint32_t
             return entry->key;
         }
 
-        index = (index + 1) & table->capacity;
+        index = (index + 1) % table->capacity;
     }
 }

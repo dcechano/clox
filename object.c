@@ -15,7 +15,7 @@
 #define ALLOCATE_OBJ(type, objectType) \
     (type *) allocateObj(sizeof(type), objectType)
 
-static Obj *allocateObj(size_t size, ObjType type) {
+static Obj* allocateObj(size_t size, ObjType type) {
     Obj *object  = (Obj *) reallocate(NULL, 0, size);
     object->type = type;
 
@@ -24,7 +24,7 @@ static Obj *allocateObj(size_t size, ObjType type) {
     return object;
 }
 
-static ObjString *allocateString(char *chars, int length, uint8_t hash) {
+static ObjString* allocateString(char *chars, int length, uint8_t hash) {
     ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
     string->length    = length;
     string->chars     = chars;
@@ -42,7 +42,7 @@ static uint8_t hashString(const char *key, int length) {
     return hash;
 }
 
-ObjString *takeString(char *chars, int length) {
+ObjString* takeString(char *chars, int length) {
     uint8_t hash        = hashString(chars, length);
     ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
 
@@ -67,7 +67,7 @@ ObjString *copyString(const char *chars, int length) {
 }
 
 void printObject(Value value) {
-    switch ((OBJ_TYPE(value))) {
+    switch (OBJ_TYPE(value)) {
         case OBJ_STRING:
             printf("%s", AS_CSTRING(value));
             break;

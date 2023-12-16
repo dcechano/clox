@@ -7,6 +7,7 @@
 #include "compiler.h"
 #include "debug.h"
 #include "memory.h"
+#include "table.h"
 #include "value.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -32,10 +33,12 @@ static void runtimeError(const char *format, ...) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    initTable(&vm.globals);
     initTable(&vm.strings);
 }
 
 void freeVM() {
+    freeTable(&vm.globals);
     freeTable(&vm.strings);
     freeObjects();
 }
@@ -83,7 +86,7 @@ InterpretResult interpret(const char *source) {
 
     vm.chunk = &chunk;
     vm.ip    = vm.chunk->bcode;
-
+    printf("source compiled");
     InterpretResult result = run();
     freeChunk(&chunk);
     return result;
@@ -91,6 +94,7 @@ InterpretResult interpret(const char *source) {
 
 static InterpretResult run() {
 #include "vm_macro.h"
+
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -120,6 +124,34 @@ static InterpretResult run() {
             case OP_FALSE:
                 push(BOOL_VAL(false));
                 break;
+            case OP_POP: {
+                pop();
+                break;
+            }
+            case OP_GET_GLOBAL: {
+                ObjString *name = READ_STRING();
+                Value value;
+                if (!tableGet(&vm.globals, name, &value)) {
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                push(value);
+                break;
+            }
+            case OP_DEFINE_GLOBAL: {
+                ObjString *name = READ_STRING();
+                tableSet(&vm.globals, name, peek(0));
+                pop();
+                break;
+            }
+            case OP_SET_GLOBAL: {
+                ObjString *name = READ_STRING();
+                if (tableSet(&vm.globals, name, peek(0))) {
+                    tableDelete(&vm.globals, name);
+                    runtimeError("Undefined variable '%s'.", name->chars);
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -170,10 +202,13 @@ static InterpretResult run() {
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
                 break;
-
-            case OP_RETURN: {
+            case OP_PRINT: {
                 printValue(pop());
                 printf("\n");
+                break;
+            }
+            case OP_RETURN: {
+                // Exit the interpreter
                 return INTERPRET_OK;
             }
         }
