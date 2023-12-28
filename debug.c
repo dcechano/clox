@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void disassembleChunk(Chunk *chunk, const char *name) {
+void disassembleChunk(Chunk* chunk, const char* name) {
     printf("== %s ==\n", name);
 
     for (int offset = 0; offset < chunk->count;) {
@@ -15,7 +15,7 @@ void disassembleChunk(Chunk *chunk, const char *name) {
     }
 }
 
-static int constantInstruction(const char *name, Chunk *chunk, int offset) {
+static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     //    `offset + 1` because `offset` points to the current
     //    OpCode where `offset + 1` contains the constantIndx
     uint8_t constantIndx = chunk->bcode[offset + 1];
@@ -26,7 +26,7 @@ static int constantInstruction(const char *name, Chunk *chunk, int offset) {
     return offset + 2;
 }
 
-static int constantLongInstruction(const char *name, Chunk *chunk, int offset) {
+static int constantLongInstruction(const char* name, Chunk* chunk, int offset) {
     int constantIndx0 = chunk->bcode[offset + 1];
     int constantIndx1 = chunk->bcode[offset + 2];
     int constantIndx2 = chunk->bcode[offset + 3];
@@ -39,7 +39,7 @@ static int constantLongInstruction(const char *name, Chunk *chunk, int offset) {
     return offset + 4;
 }
 
-int simpleInstruction(const char *name, int offset) {
+int simpleInstruction(const char* name, int offset) {
     printf("%s\n", name);
     return offset + 1;
 }
@@ -50,7 +50,14 @@ static int byteInstruction(const char* name, Chunk* chunk, int offset) {
     return offset + 2;
 }
 
-int disassembleInstructions(Chunk *chunk, int offset) {
+static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
+    uint16_t jump = (uint16_t) (chunk->bcode[offset + 1] << 8);
+    jump |= chunk->bcode[offset + 2];
+    printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
+    return offset + 3;
+}
+
+int disassembleInstructions(Chunk* chunk, int offset) {
     printf("%04d ", offset);
     if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
         printf("   | ");
@@ -104,6 +111,12 @@ int disassembleInstructions(Chunk *chunk, int offset) {
             return simpleInstruction("OP_RETURN", offset);
         case OP_PRINT:
             return simpleInstruction("OP_PRINT", offset);
+        case OP_JUMP:
+            return jumpInstruction("OP_JUMP", 1, chunk, offset);
+        case OP_JUMP_IF_FALSE:
+            return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
+        case OP_LOOP:
+            return jumpInstruction("OP_LOOP", -1, chunk, offset);
         default:
             printf("Unknown opcode %d\n", instruction);
             return offset + 1;

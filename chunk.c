@@ -2,7 +2,7 @@
 #include "memory.h"
 #include <stdlib.h>
 
-void initChunk(Chunk *chunk) {
+void initChunk(Chunk* chunk) {
     chunk->count    = 0;
     chunk->capacity = 0;
     chunk->bcode    = NULL;
@@ -10,7 +10,7 @@ void initChunk(Chunk *chunk) {
     initValueArray(&chunk->constants);
 }
 
-void freeChunk(Chunk *chunk) {
+void freeChunk(Chunk* chunk) {
     //    deallocate the memory then call initChunk() to zero out the fields.
     FREE_ARRAY(uint8_t, chunk->bcode, chunk->capacity);
     FREE_ARRAY(int, chunk->lines, chunk->capacity);
@@ -28,7 +28,7 @@ void freeChunk(Chunk *chunk) {
  * initChunk(&chunk);
  * writeChunk(&chunk, OP_RETURN);
  * */
-void writeChunk(Chunk *chunk, uint8_t byte, int line) {
+void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     if (chunk->capacity < chunk->count + 1) {
         int oldCapacity = chunk->capacity;
         chunk->capacity = GROW_CAPACITY(oldCapacity);
@@ -45,7 +45,7 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
 /*
  * Add a constant in the form of a `Value` the chunk's constant table
  * (ValueArray)*/
-int addConstant(Chunk *chunk, Value value) {
+int addConstant(Chunk* chunk, Value value) {
     writeValueArray(&chunk->constants, value);
     /*
    * After we add the constant, we return the index where the constant was
@@ -55,7 +55,7 @@ int addConstant(Chunk *chunk, Value value) {
 }
 
 // TODO FIX THIS
-int writeConstant(Chunk *chunk, Value value, int line) {
+int writeConstant(Chunk* chunk, Value value, int line) {
     int constIndx = addConstant(chunk, value);
 
     if (constIndx <= 255) {
@@ -80,5 +80,4 @@ int writeConstant(Chunk *chunk, Value value, int line) {
         }
     }
     return constIndx;
-
 }

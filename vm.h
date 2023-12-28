@@ -11,14 +11,14 @@
 #define STACK_MAX 256
 
 typedef struct {
-    Chunk *chunk;
+    Chunk* chunk;
     // Instruction pointer. Points to the current chunk's next bytecode instruction.
-    uint8_t *ip;
+    uint8_t* ip;
     Value stack[STACK_MAX];
-    Value *stackTop;
+    Value* stackTop;
     Table globals;
     Table strings;
-    Obj *objects;
+    Obj* objects;
 } VM;
 
 typedef enum {
@@ -31,7 +31,7 @@ extern VM vm;
 
 void initVM();
 void freeVM();
-InterpretResult interpret(const char *source);
+InterpretResult interpret(const char* source);
 static InterpretResult run();
 void push(Value value);
 Value pop();

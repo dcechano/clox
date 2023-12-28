@@ -34,6 +34,9 @@ typedef enum {
     OP_NOT,
     OP_NEGATE,
     OP_PRINT,
+    OP_JUMP,
+    OP_JUMP_IF_FALSE,
+    OP_LOOP,
     // Return from the current function
     OP_RETURN,
 } OpCode;
@@ -42,15 +45,15 @@ typedef enum {
 typedef struct {
     int count;
     int capacity;
-    uint8_t *bcode;
-    int *lines;
+    uint8_t* bcode;
+    int* lines;
     ValueArray constants;
 } Chunk;
 
-void initChunk(Chunk *chunk);
-void freeChunk(Chunk *chunk);
-void writeChunk(Chunk *chunk, uint8_t byte, int line);
-int addConstant(Chunk *chunk, Value value);
-int writeConstant(Chunk *chunk, Value value, int line);
+void initChunk(Chunk* chunk);
+void freeChunk(Chunk* chunk);
+void writeChunk(Chunk* chunk, uint8_t byte, int line);
+int addConstant(Chunk* chunk, Value value);
+int writeConstant(Chunk* chunk, Value value, int line);
 
 #endif
