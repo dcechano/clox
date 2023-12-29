@@ -497,7 +497,9 @@ static void statement() {
         beginScope();
         block();
         endScope();
-    } else {
+    } else if (match(TOKEN_SWITCH) {
+        switchStatement();
+    }else {
         expressionStatement();
     }
 }
