@@ -7,6 +7,7 @@
 
 typedef enum {
     // Single-character tokens.
+    TOKEN_COLON,
     TOKEN_LEFT_PAREN,
     TOKEN_RIGHT_PAREN,
     TOKEN_LEFT_BRACE,
@@ -33,7 +34,9 @@ typedef enum {
     TOKEN_NUMBER,
     // Keywords.
     TOKEN_AND,
+    TOKEN_CASE,
     TOKEN_CLASS,
+    TOKEN_DEFAULT,
     TOKEN_ELSE,
     TOKEN_FALSE,
     TOKEN_FOR,

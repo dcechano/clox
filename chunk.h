@@ -15,6 +15,7 @@ typedef enum {
    * 23 is the index to find the constant in the constant table.*/
     OP_CONSTANT,
     OP_CONSTANT_LONG,
+    OP_CASE_COMP,
     OP_NIL,
     OP_TRUE,
     OP_FALSE,

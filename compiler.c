@@ -369,9 +369,9 @@ static void forStatement() {
     }
 
     int loopStart = currentChunk()->count;
-    int exitJump = -1;
+    int exitJump  = -1;
     // Check conditional statement
-    if(!match(TOKEN_SEMICOLON)) {
+    if (!match(TOKEN_SEMICOLON)) {
         expression();
         consume(TOKEN_SEMICOLON, "Expected ';' after loop condition");
 
@@ -383,18 +383,18 @@ static void forStatement() {
     // check increment clause
     // This block is tricky.
     // Refer to https://craftinginterpreters.com/jumping-back-and-forth.html#increment-clause
-    if(!match(TOKEN_RIGHT_PAREN)) {
+    if (!match(TOKEN_RIGHT_PAREN)) {
         // first emit unconditional jump over increment clause because
         // increment should only be executed after the body of the loop
-        int bodyJump = emitJump(OP_JUMP);
+        int bodyJump       = emitJump(OP_JUMP);
         int incrementStart = currentChunk()->count;
         // parse increment clause
         expression();
         emitByte(OP_POP);
         consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
 
-        emitLoop(loopStart); // loopStart == condition expression's index in bytecode
-        loopStart = incrementStart; // change loopStart to increment's index
+        emitLoop(loopStart);       // loopStart == condition expression's index in bytecode
+        loopStart = incrementStart;// change loopStart to increment's index
         // patch jump operand made at the start of block
         patchJump(bodyJump);
     }
@@ -402,9 +402,9 @@ static void forStatement() {
     statement();
     emitLoop(loopStart);
     // patch jump operand
-    if(exitJump != -1) {
+    if (exitJump != -1) {
         patchJump(exitJump);
-        emitByte(OP_POP); // Condition
+        emitByte(OP_POP);// Condition
     }
     endScope();
 }
@@ -448,6 +448,55 @@ static void whileStatement() {
 
     patchJump(exitJump);
     emitByte(OP_POP);
+}
+
+static void caseDeclaration(int switchStart) {
+    if (match(TOKEN_CASE) || match(TOKEN_DEFAULT)) {
+         switch (parser.previous.type) {
+            case TOKEN_CASE: {
+                expression();
+                consume(TOKEN_COLON, "Expect ':' after 'case' expression.");
+
+
+                emitByte(OP_CASE_COMP);
+                int thenJump = emitJump(OP_JUMP_IF_FALSE);
+                emitByte(OP_POP);
+                statement();
+                emitLoop(switchStart);
+                patchJump(thenJump);
+                emitByte(OP_POP);
+                break;
+            }
+            case TOKEN_DEFAULT: {
+                consume(TOKEN_COLON, "Expect ':' after 'default' keyword.");
+                emitByte(OP_POP);
+                statement();
+                emitLoop(switchStart);
+                break;
+            }
+        }
+    } else {
+        advance();
+    }
+}
+
+static void switchStatement() {
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'");
+    expression();
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition");
+
+    int jumpToCase = emitJump(OP_JUMP);
+    int loopStart   = currentChunk()->count;
+    int endSwitch   = emitJump(OP_JUMP);
+    patchJump(jumpToCase);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' after switch expression");
+    while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+        caseDeclaration(loopStart);
+
+    }
+    patchJump(endSwitch);
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' to conclude case statement");
 }
 
 static void synchronize() {
@@ -497,9 +546,9 @@ static void statement() {
         beginScope();
         block();
         endScope();
-    } else if (match(TOKEN_SWITCH) {
+    } else if (match(TOKEN_SWITCH)) {
         switchStatement();
-    }else {
+    } else {
         expressionStatement();
     }
 }
@@ -529,7 +578,9 @@ static void unary(bool _) {
 
 static void and_(bool canAssign);
 
+
 ParseRule rules[] = {
+        [TOKEN_COLON]         = {NULL, NULL, PREC_NONE},
         [TOKEN_LEFT_PAREN]    = {grouping, NULL, PREC_NONE},
         [TOKEN_RIGHT_PAREN]   = {NULL, NULL, PREC_NONE},
         [TOKEN_LEFT_BRACE]    = {NULL, NULL, PREC_NONE},
@@ -567,11 +618,11 @@ ParseRule rules[] = {
         [TOKEN_THIS]          = {NULL, NULL, PREC_NONE},
         [TOKEN_TRUE]          = {literal, NULL, PREC_NONE},
         [TOKEN_VAR]           = {NULL, NULL, PREC_NONE},
+        [TOKEN_SWITCH]        = {NULL, NULL, PREC_NONE},
         [TOKEN_WHILE]         = {NULL, NULL, PREC_NONE},
         [TOKEN_ERROR]         = {NULL, NULL, PREC_NONE},
         [TOKEN_EOF]           = {NULL, NULL, PREC_NONE},
 };
-
 static void parsePrecedence(const Precedence precedence) {
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;

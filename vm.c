@@ -117,6 +117,13 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
+            case OP_CASE_COMP: {
+                const Value b = pop();
+                // we dont want to pop this one becuase it needs to stay on the stack for later
+                const Value a = *(vm.stackTop - 1);
+                push(BOOL_VAL(valuesEqual(a, b)));
+                break;
+            }
             case OP_NIL:
                 push(NIL_VAL);
                 break;
