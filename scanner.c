@@ -1,5 +1,8 @@
 #include "scanner.h"
 #include "common.h"
+#include "value.h"
+#include "vm.h"
+
 #include <stdio.h>
 #include <string.h>
 

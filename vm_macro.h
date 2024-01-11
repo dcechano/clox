@@ -6,13 +6,16 @@
 #ifndef CLOX_VM_MACRO_H
 #define CLOX_VM_MACRO_H
 
-#define READ_BYTE() ((int) *vm.ip++)
+#define READ_BYTE() (*frame->ip++)
 #define READ_SHORT() \
-    (vm.ip += 2, (uint16_t) ((vm.ip[-2] << 8) | vm.ip[-1]))
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+    (frame->ip += 2, (uint16_t) ((frame->ip[-2] << 8) | frame->ip[-1]))
+#define READ_INT() \
+    (frame->ip += 3, (int32_t) ((frame->ip[-3] << 8) | frame->ip[-2] | frame->ip[-1]))
+
+#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_LONG_CONSTANT() \
-    (vm.chunk->constants.values[READ_BYTE() + READ_BYTE() + READ_BYTE()])
+    (frame->function->chunk.constants.values[READ_INT()])
 
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \

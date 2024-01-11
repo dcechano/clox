@@ -54,7 +54,7 @@ int addConstant(Chunk* chunk, Value value) {
     return chunk->constants.count - 1;
 }
 
-// TODO FIX THIS
+// TODO TEST THIS LATER!
 int writeConstant(Chunk* chunk, Value value, int line) {
     int constIndx = addConstant(chunk, value);
 
@@ -68,16 +68,21 @@ int writeConstant(Chunk* chunk, Value value, int line) {
     }
 
     writeChunk(chunk, OP_CONSTANT_LONG, line);
-    writeChunk(chunk, 255, line);
-    for (int i = 0; i < 2; i++) {
-        constIndx = constIndx - 255;
-        if (constIndx < 0) {
-            writeChunk(chunk, 0, line);
-        } else if (constIndx > 255) {
-            writeChunk(chunk, 255, line);
-        } else {
-            writeChunk(chunk, constIndx, line);
-        }
-    }
+    writeChunk(chunk, constIndx >> 16, line);
+    writeChunk(chunk, constIndx >> 8, line);
+    writeChunk(chunk, constIndx & 0xff, line);
+
+
+    // writeChunk(chunk, 255, line);
+    // for (int i = 0; i < 2; i++) {
+    //     constIndx = constIndx - 255;
+    //     if (constIndx < 0) {
+    //         writeChunk(chunk, 0, line);
+    //     } else if (constIndx > 255) {
+    //         writeChunk(chunk, 255, line);
+    //     } else {
+    //         writeChunk(chunk, constIndx, line);
+    //     }
+    // }
     return constIndx;
 }
