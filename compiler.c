@@ -224,7 +224,7 @@ static ObjFunction* endCompiler() {
 
 static void endScope() {
     currentCompiler->scopeDepth--;
-    // TODO Figure out why this loop executes after adding recent changes
+
     while (currentCompiler->localCount > 0 &&
            currentCompiler->locals[currentCompiler->localCount - 1]
                            .depth > currentCompiler->scopeDepth) {
@@ -820,7 +820,7 @@ static void markInitialized() {
         return;
     }
     currentCompiler->locals[currentCompiler->localCount - 1].depth =
-            currentCompiler->localCount;
+            currentCompiler->scopeDepth;
 }
 
 static void defineVariable(uint8_t global) {
