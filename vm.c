@@ -37,7 +37,7 @@ static void runtimeError(const char* format, ...) {
 
     for (int i = vm.frameCount - 1; i >= 0; i--) {
         CallFrame* frame      = &vm.frames[i];
-        ObjFunction* function = frame->function;
+        ObjFunction* function = frame->closure->function;
         size_t instruction    = frame->ip - function->chunk.bcode - 1;
         fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
         if (function->name == NULL) {
@@ -86,9 +86,9 @@ static Value peek(int distance) {
     return vm.stackTop[-1 - distance];
 }
 
-static bool call(ObjFunction* function, int argCount) {
-    if (argCount != function->arity) {
-        runtimeError("Expected %d arguments but got %d.", function->arity, argCount);
+static bool call(ObjClosure* closure, int argCount) {
+    if (argCount != closure->function->arity) {
+        runtimeError("Expected %d arguments but got %d.", closure->function->arity, argCount);
         return false;
     }
 
@@ -98,8 +98,8 @@ static bool call(ObjFunction* function, int argCount) {
     }
 
     CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->function  = function;
-    frame->ip        = function->chunk.bcode;
+    frame->closure  = closure;
+    frame->ip        = closure->function->chunk.bcode;
     frame->slots     = vm.stackTop - argCount - 1;
     return true;
 }
@@ -107,8 +107,8 @@ static bool call(ObjFunction* function, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-            case OBJ_FUNCTION:
-                return call(AS_FUNCTION(callee), argCount);
+            case OBJ_CLOSURE:
+                return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
                 NativeFn native = AS_NATIVE(callee);
                 Value result    = native(argCount, vm.stackTop - argCount);
@@ -151,15 +151,17 @@ InterpretResult interpret(const char* source) {
 
     push(OBJ_VAL(function));
     printf("source compiled\n");
+    ObjClosure* closure = newClosure(function);
+    pop();
+    push(OBJ_VAL(closure));
+    call(closure, 0);
 
-    call(function, 0);
     return run();
 }
 
 static InterpretResult run() {
 #include "vm_macro.h"
 
-    printf("vm.frameCount: %d\n", vm.frameCount);
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
@@ -170,7 +172,7 @@ static InterpretResult run() {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstructions(&frame->function->chunk, (int) (frame->ip - frame->function->chunk.bcode));
+        disassembleInstructions(&frame->closure->function->chunk, (int) (frame->ip - frame->closure->function->chunk.bcode));
 #endif
 
         int instruction;
@@ -314,6 +316,12 @@ static InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            case OP_CLOSURE: {
+                ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
+                ObjClosure* closure   = newClosure(function);
+                push(OBJ_VAL(closure));
                 break;
             }
             case OP_RETURN: {

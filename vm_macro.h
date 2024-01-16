@@ -12,10 +12,10 @@
 #define READ_INT() \
     (frame->ip += 3, (int32_t) ((frame->ip[-3] << 8) | frame->ip[-2] | frame->ip[-1]))
 
-#define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
+#define READ_CONSTANT() (frame->closure->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define READ_LONG_CONSTANT() \
-    (frame->function->chunk.constants.values[READ_INT()])
+    (frame->closure->function->chunk.constants.values[READ_INT()])
 
 #define BINARY_OP(valueType, op)                          \
     do {                                                  \
