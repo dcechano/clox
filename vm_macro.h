@@ -1,7 +1,6 @@
 //
 // Created by dylan on 11/8/23.
 //
-#include "object.h"
 
 #ifndef CLOX_VM_MACRO_H
 #define CLOX_VM_MACRO_H

@@ -7,7 +7,7 @@
 /*
  * Opcode used by the compiler.
  * Some opcodes imply that there is an operand stored as binary
- * date immediately after the opcode.*/
+ * data immediately after the opcode.*/
 typedef enum {
     /* OP_CONSTANT implies that there is an index to a constant immediately
    * following the OpCode in memory.
@@ -25,6 +25,8 @@ typedef enum {
     OP_DEFINE_GLOBAL,
     OP_SET_LOCAL,
     OP_SET_GLOBAL,
+    OP_GET_UPVALUE,
+    OP_SET_UPVALUE,
     OP_EQUAL,
     OP_GREATER,
     OP_LESS,
@@ -40,7 +42,7 @@ typedef enum {
     OP_LOOP,
     OP_CALL,
     OP_CLOSURE,
-    OP_BYTES,
+    OP_CLOSE_UPVALUE,
     // Return from the current function
     OP_RETURN,
 } OpCode;

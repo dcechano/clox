@@ -1,5 +1,7 @@
 #include "chunk.h"
 #include "memory.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 
 void initChunk(Chunk* chunk) {
@@ -66,7 +68,6 @@ int writeConstant(Chunk* chunk, Value value, int line) {
     if (constIndx > 255 * 3) {
         exit(1);
     }
-
     writeChunk(chunk, OP_CONSTANT_LONG, line);
     writeChunk(chunk, constIndx >> 16, line);
     writeChunk(chunk, constIndx >> 8, line);

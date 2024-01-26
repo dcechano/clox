@@ -2,13 +2,12 @@
 // Created by dylan on 11/7/23.
 //
 
-#include <time.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
-#include "vm.h"
 #include "chunk.h"
 #include "common.h"
 #include "compiler.h"
@@ -16,16 +15,18 @@
 #include "memory.h"
 #include "table.h"
 #include "value.h"
+#include "vm.h"
 
 VM vm;
 
 static Value clockNative(int argCount, Value* args) {
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+    return NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
 }
 
 static void resetStack() {
     vm.stackTop   = vm.stack;
     vm.frameCount = 0;
+    vm.openUpvalues = NULL;
 }
 
 static void runtimeError(const char* format, ...) {
@@ -98,7 +99,7 @@ static bool call(ObjClosure* closure, int argCount) {
     }
 
     CallFrame* frame = &vm.frames[vm.frameCount++];
-    frame->closure  = closure;
+    frame->closure   = closure;
     frame->ip        = closure->function->chunk.bcode;
     frame->slots     = vm.stackTop - argCount - 1;
     return true;
@@ -124,6 +125,38 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+static ObjUpvalue* captureUpvalue(Value* local) {
+    // First we check if this upvalue has been captured before.
+    ObjUpvalue* prevUpvalue = NULL;
+    ObjUpvalue* upvalue = vm.openUpvalues;
+    while (upvalue != NULL && upvalue->location > local) {
+        prevUpvalue = upvalue;
+        upvalue     = upvalue->next;
+    }
+    // if so, return it.
+    if(upvalue != NULL && upvalue->location == local) {
+        return upvalue;
+    }
+
+    // else it must be a new one, in which case we create a new upvalue.
+    ObjUpvalue* createdUpvalue = newUpvalue(local);
+    createdUpvalue->next       = upvalue;
+    if(prevUpvalue == NULL) {
+        vm.openUpvalues = createdUpvalue;
+    } else {
+        prevUpvalue->next = createdUpvalue;
+    }
+    return createdUpvalue;
+}
+
+static void closeUpvalues(Value* last) {
+    while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+        ObjUpvalue* upvalue = vm.openUpvalues;
+        upvalue->closed     = *upvalue->location;
+        upvalue->location = &upvalue->closed;
+        vm.openUpvalues     = upvalue->next;
+    }
+}
 
 static bool isFalsey(Value value) {
     return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
@@ -172,7 +205,7 @@ static InterpretResult run() {
             printf(" ]");
         }
         printf("\n");
-        disassembleInstructions(&frame->closure->function->chunk, (int) (frame->ip - frame->closure->function->chunk.bcode));
+        disassembleInstruction(&frame->closure->function->chunk, (int) (frame->ip - frame->closure->function->chunk.bcode));
 #endif
 
         int instruction;
@@ -235,6 +268,16 @@ static InterpretResult run() {
                     runtimeError("Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+            case OP_GET_UPVALUE: {
+                uint8_t slot = READ_BYTE();
+                push(*frame->closure->upvalues[slot]->location);
+                break;
+            }
+            case OP_SET_UPVALUE: {
+                uint8_t slot                              = READ_BYTE();
+                *frame->closure->upvalues[slot]->location = peek(0);
                 break;
             }
             case OP_EQUAL: {
@@ -322,10 +365,25 @@ static InterpretResult run() {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 ObjClosure* closure   = newClosure(function);
                 push(OBJ_VAL(closure));
+                for (int i = 0; i < closure->upvalueCount; i++) {
+                    uint8_t isLocal = READ_BYTE();
+                    uint8_t index   = READ_BYTE();
+                    if (isLocal) {
+                        closure->upvalues[i] = captureUpvalue(frame->slots + index);
+                    } else {
+                        closure->upvalues[i] = frame->closure->upvalues[index];
+                    }
+                }
+                break;
+            }
+            case OP_CLOSE_UPVALUE: {
+                closeUpvalues(vm.stackTop - 1);
+                pop();
                 break;
             }
             case OP_RETURN: {
                 Value result = pop();
+                closeUpvalues(frame->slots);
                 vm.frameCount--;
                 if (vm.frameCount == 0) {
                     pop();
