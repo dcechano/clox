@@ -24,8 +24,8 @@ static Value clockNative(int argCount, Value* args) {
 }
 
 static void resetStack() {
-    vm.stackTop   = vm.stack;
-    vm.frameCount = 0;
+    vm.stackTop     = vm.stack;
+    vm.frameCount   = 0;
     vm.openUpvalues = NULL;
 }
 
@@ -128,20 +128,20 @@ static bool callValue(Value callee, int argCount) {
 static ObjUpvalue* captureUpvalue(Value* local) {
     // First we check if this upvalue has been captured before.
     ObjUpvalue* prevUpvalue = NULL;
-    ObjUpvalue* upvalue = vm.openUpvalues;
+    ObjUpvalue* upvalue     = vm.openUpvalues;
     while (upvalue != NULL && upvalue->location > local) {
         prevUpvalue = upvalue;
         upvalue     = upvalue->next;
     }
     // if so, return it.
-    if(upvalue != NULL && upvalue->location == local) {
+    if (upvalue != NULL && upvalue->location == local) {
         return upvalue;
     }
 
     // else it must be a new one, in which case we create a new upvalue.
     ObjUpvalue* createdUpvalue = newUpvalue(local);
     createdUpvalue->next       = upvalue;
-    if(prevUpvalue == NULL) {
+    if (prevUpvalue == NULL) {
         vm.openUpvalues = createdUpvalue;
     } else {
         prevUpvalue->next = createdUpvalue;
@@ -153,7 +153,7 @@ static void closeUpvalues(Value* last) {
     while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
         ObjUpvalue* upvalue = vm.openUpvalues;
         upvalue->closed     = *upvalue->location;
-        upvalue->location = &upvalue->closed;
+        upvalue->location   = &upvalue->closed;
         vm.openUpvalues     = upvalue->next;
     }
 }
