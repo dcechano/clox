@@ -25,6 +25,9 @@
  *  Non‑zero 	Larger than oldSize 	Grow existing allocation.
  */
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+void markObject(Obj* object);
+void markValue(Value value);
+void collectGarbage();
 void freeObjects();
 
 #endif// CLOX_MEMORY_H
