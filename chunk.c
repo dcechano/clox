@@ -1,5 +1,6 @@
 #include "chunk.h"
 #include "memory.h"
+#include "vm.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +49,11 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
  * Add a constant in the form of a `Value` the chunk's constant table
  * (ValueArray)*/
 int addConstant(Chunk* chunk, Value value) {
+    // push value on to stack in case the next line triggers a gc.
+    push(value);
     writeValueArray(&chunk->constants, value);
+    pop(value); // value is now safe to take off stack
+
     /*
    * After we add the constant, we return the index where the constant was
    * appended so that we can locate that same constant later.
