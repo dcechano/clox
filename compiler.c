@@ -318,6 +318,22 @@ static void call(bool _) {
     emitBytes(OP_CALL, argCount);
 }
 
+static uint8_t identifierConstant(const Token* name);
+static int resolveLocal(Compiler* compiler, const Token* name);
+static int resolveUpvalue(Compiler* compiler, Token* name);
+
+static void dot(bool canAssign) {
+    consume(TOKEN_IDENTIFIER, "Expect property name after '.'");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    if (canAssign && match(TOKEN_EQUAL)) {
+        expression();
+        emitBytes(OP_SET_PROPERTY, name);
+    } else {
+        emitBytes(OP_GET_PROPERTY, name);
+    }
+}
+
 static void literal(bool _) {
     switch (parser.previous.type) {
         case TOKEN_FALSE:
@@ -354,9 +370,6 @@ static void string(bool _) {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
-static uint8_t identifierConstant(const Token* name);
-static int resolveLocal(Compiler* compiler, const Token* name);
-static int resolveUpvalue(Compiler* compiler, Token* name);
 
 static void namedVariable(Token name, const bool canAssign) {
     uint8_t getOp, setOp;
@@ -400,6 +413,7 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block");
 }
 
+static void declareVariable();
 static uint8_t parseVariable(const char* errorMessage);
 static void defineVariable(uint8_t global);
 static void markInitialized();
@@ -447,7 +461,6 @@ static void funDeclaration() {
     function(TYPE_FUNCTION);
     defineVariable(global);
 }
-
 
 static void varDeclaration() {
     uint8_t global = parseVariable("Expect variable name");
@@ -649,8 +662,22 @@ static void synchronize() {
     }
 }
 
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    uint8_t nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitBytes(OP_CLASS, nameConstant);
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+}
+
 static void declaration() {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FUN)) {
         funDeclaration();
     } else if (match(TOKEN_VAR)) {
         varDeclaration();
@@ -716,7 +743,7 @@ ParseRule rules[] = {
         [TOKEN_LEFT_BRACE]    = {NULL, NULL, PREC_NONE},
         [TOKEN_RIGHT_BRACE]   = {NULL, NULL, PREC_NONE},
         [TOKEN_COMMA]         = {NULL, NULL, PREC_NONE},
-        [TOKEN_DOT]           = {NULL, NULL, PREC_NONE},
+        [TOKEN_DOT]           = {NULL, dot, PREC_CALL},
         [TOKEN_MINUS]         = {unary, binary, PREC_TERM},
         [TOKEN_PLUS]          = {NULL, binary, PREC_TERM},
         [TOKEN_SEMICOLON]     = {NULL, NULL, PREC_NONE},

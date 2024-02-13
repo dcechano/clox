@@ -22,7 +22,7 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
 #endif
     }
 
-    if(vm.bytesAllocated > vm.nextGC) {
+    if (vm.bytesAllocated > vm.nextGC) {
         collectGarbage();
     }
 
@@ -84,6 +84,11 @@ static void blackenObject(Obj* object) {
 #endif
 
     switch (object->type) {
+        case OBJ_CLASS: {
+            ObjClass* class = (ObjClass*) object;
+            markObject((Obj*) class->name);
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*) object;
             markObject((Obj*) closure->function);
@@ -96,6 +101,12 @@ static void blackenObject(Obj* object) {
             ObjFunction* function = (ObjFunction*) object;
             markObject((Obj*) function->name);
             markArray(&function->chunk.constants);
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            markObject((Obj*) instance->class);
+            markTable(&instance->fields);
             break;
         }
         case OBJ_UPVALUE:
@@ -114,6 +125,10 @@ static void freeObject(Obj* object) {
 #endif
 
     switch (object->type) {
+        case OBJ_CLASS: {
+            FREE(OBJ_CLASS, object);
+            break;
+        }
         case OBJ_CLOSURE: {
             ObjClosure* closure = (ObjClosure*) object;
             FREE_ARRAY(ObjUpvalue*, closure->upvalues, closure->upvalueCount);
@@ -133,6 +148,12 @@ static void freeObject(Obj* object) {
             ObjString* string = (ObjString*) object;
             FREE_ARRAY(char, string->chars, string->length + 1);
             FREE(ObjString, object);
+            break;
+        }
+        case OBJ_INSTANCE: {
+            ObjInstance* instance = (ObjInstance*) object;
+            freeTable(&instance->fields);
+            FREE(ObjInstance, object);
             break;
         }
         case OBJ_UPVALUE: {
@@ -170,14 +191,14 @@ static void sweep() {
     Obj* previous = NULL;
     Obj* object   = vm.objects;
     while (object != NULL) {
-        if(object->isMarked) {
+        if (object->isMarked) {
             object->isMarked = false;
-            previous = object;
-            object   = object->next;
+            previous         = object;
+            object           = object->next;
         } else {
             Obj* unreached = object;
             object         = object->next;
-            if(previous != NULL) {
+            if (previous != NULL) {
                 previous->next = object;
             } else {
                 vm.objects = object;
@@ -186,7 +207,6 @@ static void sweep() {
             freeObject(unreached);
         }
     }
-
 }
 
 void collectGarbage() {

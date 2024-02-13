@@ -52,7 +52,7 @@ int addConstant(Chunk* chunk, Value value) {
     // push value on to stack in case the next line triggers a gc.
     push(value);
     writeValueArray(&chunk->constants, value);
-    pop(value); // value is now safe to take off stack
+    pop(value);// value is now safe to take off stack
 
     /*
    * After we add the constant, we return the index where the constant was
