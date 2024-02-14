@@ -17,10 +17,41 @@
 #include "value.h"
 #include "vm.h"
 
+#include <stdlib.h>
+
 VM vm;
+
+static void runtimeError(const char* format, ...);
 
 static Value clockNative(int argCount, Value* args) {
     return NUMBER_VAL((double) clock() / CLOCKS_PER_SEC);
+}
+
+static Value reflectFieldNative(int argCount, Value* args) {
+    printf("Inside reflect Native\n");
+
+    if (argCount != 2) {
+        runtimeError("reflect function must have exactly 2 arguments.");
+        exit(1);
+    }
+    if (!IS_OBJ(*args) || !IS_INSTANCE(*args)) {
+        runtimeError("First argument of reflect function must be an instance.");
+        exit(1);
+
+    }
+    ObjInstance* instance = AS_INSTANCE(*args);
+    args += 1;
+    if(!IS_STRING(*args)) {
+        runtimeError("Second argument of reflect must be a String.");
+        exit(1);
+    }
+
+    ObjString* fieldName = AS_STRING(*args);
+    Value value;
+    if(!tableGet(&instance->fields, fieldName, &value)) {
+        return NIL_VAL;
+    }
+    return value;
 }
 
 static void resetStack() {
@@ -71,6 +102,7 @@ void initVM() {
     initTable(&vm.strings);
 
     defineNative("clock", clockNative);
+    defineNative("reflectField", reflectFieldNative);
 }
 
 void freeVM() {
