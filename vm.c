@@ -28,21 +28,19 @@ static Value clockNative(int argCount, Value* args) {
 }
 
 static Value reflectFieldNative(int argCount, Value* args) {
-    printf("Inside reflect Native\n");
-
     if (argCount != 2) {
-        runtimeError("reflect function must have exactly 2 arguments.");
+        runtimeError("reflectField function must have exactly 2 arguments.");
         exit(1);
     }
     if (!IS_OBJ(*args) || !IS_INSTANCE(*args)) {
-        runtimeError("First argument of reflect function must be an instance.");
+        runtimeError("First argument of reflectField function must be an instance.");
         exit(1);
 
     }
     ObjInstance* instance = AS_INSTANCE(*args);
     args += 1;
     if(!IS_STRING(*args)) {
-        runtimeError("Second argument of reflect must be a String.");
+        runtimeError("Second argument of reflectField must be a String.");
         exit(1);
     }
 
