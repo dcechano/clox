@@ -148,7 +148,7 @@ static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
             case OBJ_BOUND_METHOD: {
-                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                ObjBoundMethod* bound      = AS_BOUND_METHOD(callee);
                 vm.stackTop[-argCount - 1] = bound->reciever;
                 return call(bound->method, argCount);
             }
@@ -158,7 +158,7 @@ static bool callValue(Value callee, int argCount) {
                 Value initializer;
                 if (tableGet(&class->methods, vm.initString, &initializer)) {
                     return call(AS_CLOSURE(initializer), argCount);
-                } else if(argCount != 0) {
+                } else if (argCount != 0) {
                     runtimeError("Expected 0 arguments but got &d.", argCount);
                     return false;
                 }
@@ -192,7 +192,7 @@ static bool invokeFromClass(ObjClass* class, ObjString* name, int argCount) {
 
 static bool invoke(ObjString* name, int argCount) {
     Value receiver = peek(argCount);
-    if(!IS_INSTANCE(receiver)) {
+    if (!IS_INSTANCE(receiver)) {
         runtimeError("Only instances have methods.");
         return false;
     }
@@ -209,7 +209,7 @@ static bool invoke(ObjString* name, int argCount) {
 
 static bool bindMethod(ObjClass* class, ObjString* name) {
     Value method;
-    if(!tableGet(&class->methods, name, &method)) {
+    if (!tableGet(&class->methods, name, &method)) {
         runtimeError("Undefined property '%s'.", name->chars);
         return false;
     }
@@ -418,6 +418,15 @@ static InterpretResult run() {
                 push(value);
                 break;
             }
+            case OP_GET_SUPER: {
+                ObjString* name      = READ_STRING();
+                ObjClass* superclass = AS_CLASS(pop());
+
+                if (!bindMethod(superclass, name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -502,7 +511,24 @@ static InterpretResult run() {
             case OP_INVOKE: {
                 ObjString* method = READ_STRING();
                 int argCount      = READ_BYTE();
-                if(!invoke(method, argCount)) {
+                if (!invoke(method, argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            case OP_SUPER_INVOKE: {
+                ObjString* method    = READ_STRING();
+                int argCount         = READ_BYTE();
+                ObjClass* superclass = AS_CLASS(pop());
+                /*
+                We pass the superclass, method name, and argument count to our existing invokeFromClass() function.
+                That function looks up the given method on the given class and attempts to create a call to it with the given arity.
+                If a method could not be found, it returns false, and we bail out of the interpreter.
+                Otherwise, invokeFromClass() pushes a new CallFrame onto the call stack for the method’s closure.
+                That invalidates the interpreter’s cached CallFrame pointer, so we refresh frame.
+                */
+                if (!invokeFromClass(superclass, method, argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm.frames[vm.frameCount - 1];
@@ -545,6 +571,17 @@ static InterpretResult run() {
             case OP_CLASS:
                 push(OBJ_VAL(newClass(READ_STRING())));
                 break;
+            case OP_INHERIT: {
+                Value superclass = peek(1);
+                if (!IS_CLASS(superclass)) {
+                    runtimeError("Superclass must be a class.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ObjClass* subclass = AS_CLASS(peek(0));
+                tableAddAll(&AS_CLASS(superclass)->methods, &subclass->methods);
+                pop();
+                break;
+            }
             case OP_METHOD:
                 defineMethod(READ_STRING());
                 break;
